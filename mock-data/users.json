@@ -1,0 +1,100 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "products": [
+        {
+          "id": 1,
+          "name": "kitKat",
+          "СHTS": 12,
+          "GMS": 100,
+          "bUnit": 1.0,
+          "totalСHTS": 12,
+          "propductInGMS": 100
+        },
+        {
+          "id": 2,
+          "name": "milkyway",
+          "СHTS": 24,
+          "GMS": 100,
+          "bUnit": 2.0,
+          "totalСHTS": 24,
+          "propductInGMS": 50
+        },
+        {
+          "id": 3,
+          "name": "milka",
+          "СHTS": 36,
+          "GMS": 100,
+          "bUnit": 3.0,
+          "totalСHTS": 36,
+          "propductInGMS": 33
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "products": [
+        {
+          "id": 1,
+          "name": "Mars",
+          "СHTS": 12,
+          "GMS": 100,
+          "bUnit": 1.0,
+          "totalСHTS": 12,
+          "propductInGMS": 100
+        },
+        {
+          "id": 2,
+          "name": "Dove",
+          "СHTS": 24,
+          "GMS": 100,
+          "bUnit": 2.0,
+          "totalСHTS": 24,
+          "propductInGMS": 50
+        },
+        {
+          "id": 3,
+          "name": "ritter sports with nuts",
+          "СHTS": 36,
+          "GMS": 100,
+          "bUnit": 3.0,
+          "totalСHTS": 36,
+          "propductInGMS": 33
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "products": [
+        {
+          "id": 1,
+          "name": "Kinder",
+          "СHTS": 12,
+          "GMS": 100,
+          "bUnit": 1.0,
+          "totalСHTS": 12,
+          "propductInGMS": 100
+        },
+        {
+          "id": 2,
+          "name": "pizza",
+          "СHTS": 24,
+          "GMS": 100,
+          "bUnit": 2.0,
+          "totalСHTS": 24,
+          "propductInGMS": 50
+        },
+        {
+          "id": 3,
+          "name": "burger",
+          "СHTS": 36,
+          "GMS": 100,
+          "bUnit": 3.0,
+          "totalСHTS": 36,
+          "propductInGMS": 33
+        }
+      ]
+    }
+  ]
+}
