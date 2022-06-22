@@ -16,21 +16,26 @@ function getData(path) {
   return data;
 }
 
-function putHttpRoute(route, method, mockData) {
+function putHttpRoute(app, route, method, mockData) {
   switch (method) {
     case "post":
       app.post(route, (req, res) => {
         res.send(mockData);
       });
-      break;
 
-    default:
+    case "get":
       app.get(route, (req, res) => {
         res.send(mockData);
       });
   }
 }
 
-putHttpRoute(routes.users, "post", getData(mockDataPath.users));
+function serverListener(app, port) {
+  app.listen(port, () => {
+    console.log("server start");
+  });
+}
 
-app.listen(port);
+putHttpRoute(app, routes.users, "get", getData(mockDataPath.users));
+
+serverListener(app, port);
