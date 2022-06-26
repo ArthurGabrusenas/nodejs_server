@@ -34,7 +34,7 @@ function putHttpRoute(app, route, method, mockData = null) {
       app.post(route, cors(), (req, res) => {
         // TODO give the updated user object
         // TODO change file with users
-        res.send(route, req.params.id);
+        res.send(`${route}, ${req.params.id}`);
       });
 
     case "get":
