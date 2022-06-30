@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
+const fs = require("fs");
 const app = express();
 const port = 3100;
 const upload = multer();
@@ -22,6 +23,14 @@ function getData(path) {
 
   return data;
 }
+
+function writeDataInJSON(file, data) {
+  fs.writeFile(file, JSON.stringify(data), "utf8", (err) => {
+    if (err) {
+      throw err;
+    }
+  });
+}
 ////
 
 function addUserProduct(request) {
@@ -32,13 +41,23 @@ function addUserProduct(request) {
     ...request.body,
   };
 
-  const newProductsObject = savedUsers.users.map((user) => {
+  savedUsers.users.map((user) => {
     if (appendUserId === user.id) {
       user.products.push(addedProduct);
     }
   });
 
-  // TODO write a newProductsObject object to a file
+  try {
+    writeDataInJSON(mockDataPath.users, savedUsers);
+
+    const updatedProductList = getData(mockDataPath.users).users[appendUserId]
+      .products;
+
+    return updatedProductList;
+  } catch (err) {
+    console.log(err);
+    return "err add";
+  }
 }
 
 function updateUserProduct(request) {
@@ -47,13 +66,22 @@ function updateUserProduct(request) {
   const savedUsers = getData(mockDataPath.users);
   const appendProduct = request.body;
 
-  const newProductObject = (savedUsers.users[appendUserId].products[
-    appendProductId
-  ] = {
+  savedUsers.users[appendUserId].products[appendProductId] = {
+    id: appendProductId,
     ...appendProduct,
-  });
+  };
 
-  // TODO write a newProductObject object to a file
+  try {
+    writeDataInJSON(mockDataPath.users, savedUsers);
+
+    const updatedList = getData(mockDataPath.users).users[appendUserId]
+      .products;
+
+    return updatedList;
+  } catch (err) {
+    console.log(err);
+    return "err update";
+  }
 }
 
 function putHttpRoute(
@@ -61,8 +89,7 @@ function putHttpRoute(
   route,
   method,
   mockData = null,
-  resProcessCallback = null,
-  sendMessage
+  resProcessCallback = null
 ) {
   // TODO configure cors for a personal server
   const corsOptions = {
@@ -80,10 +107,10 @@ function putHttpRoute(
     case "post":
       app.post(route, upload.array(), cors(), (req, res) => {
         if (resProcessCallback) {
-          resProcessCallback(req);
-        }
+          const result = resProcessCallback(req);
 
-        res.send(sendMessage);
+          res.send(result);
+        }
       });
 
     case "get":
@@ -101,22 +128,8 @@ function serverListener(app, port) {
 
 putHttpRoute(app, routes.users, "get", getData(mockDataPath.users));
 
-putHttpRoute(
-  app,
-  routes.userProduct,
-  "post",
-  null,
-  updateUserProduct,
-  "product update success"
-);
+putHttpRoute(app, routes.userProduct, "post", null, updateUserProduct);
 
-putHttpRoute(
-  app,
-  routes.userProducts,
-  "post",
-  null,
-  addUserProduct,
-  "product add success"
-);
+putHttpRoute(app, routes.userProducts, "post", null, addUserProduct);
 
 serverListener(app, port);
