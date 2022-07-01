@@ -13,6 +13,7 @@ const mockDataPath = {
 
 const routes = {
   users: "/users",
+  userAuthorization: "/user",
   userProductUpdate: "/user/:userId/update/products/:productId",
   userProductDelete: "/user/:userId/delete/products/:productId",
   userProducts: "/user/:userId/products",
@@ -45,6 +46,41 @@ function getId(arr) {
   return maxId + 1;
 }
 ////
+
+function userAuthorization(request) {
+  // TODO добавить проверку по записанным login (если у любого из юзеров есть подобный login, то вернуть ошибку)
+
+  const savedUsers = getData(mockDataPath.users);
+  const id = getId(savedUsers.users);
+  const userEmail = request.body.login;
+  const userPassword = request.body.password;
+
+  const addedUser = {
+    id: id,
+    login: userEmail,
+    password: userPassword,
+    products: [],
+  };
+
+  const updatedUsers = {
+    users: [...savedUsers.users, addedUser],
+  };
+
+  try {
+    writeDataInJSON(mockDataPath.users, updatedUsers);
+
+    // результат должен быть обработан после записи в файл (writeDataInJSON), получить нового юзера по id из файла и вернуть его
+    // TODO сейчас возвращается undefined
+    const result = getData(mockDataPath.users).users.find(
+      (user) => user.id === id
+    );
+
+    return result;
+  } catch (err) {
+    console.log(err);
+    return "err add";
+  }
+}
 
 function addUserProduct(request) {
   const paramsUserId = Number(request.params.userId);
@@ -155,7 +191,6 @@ function putHttpRoute(
           res.send(result);
         }
       });
-
     case "get":
       app.get(route, cors(), (req, res) => {
         res.send(mockData);
@@ -183,5 +218,7 @@ putHttpRoute(app, routes.userProductUpdate, "post", null, updateUserProduct);
 putHttpRoute(app, routes.userProducts, "post", null, addUserProduct);
 
 putHttpRoute(app, routes.userProductDelete, "delete", null, deleteUserProduct);
+
+putHttpRoute(app, routes.userAuthorization, "post", null, userAuthorization);
 
 serverListener(app, port);
