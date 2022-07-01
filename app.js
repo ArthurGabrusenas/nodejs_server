@@ -13,7 +13,8 @@ const mockDataPath = {
 
 const routes = {
   users: "/users",
-  userProduct: "/user/:userId/products/:productId",
+  userProductUpdate: "/user/:userId/update/products/:productId",
+  userProductDelete: "/user/:userId/delete/products/:productId",
   userProducts: "/user/:userId/products",
 };
 
@@ -31,18 +32,33 @@ function writeDataInJSON(file, data) {
     }
   });
 }
+
+function getId(arr) {
+  let arrIdList = [];
+
+  arr.map((item) => {
+    arrIdList.push(item.id);
+  });
+
+  const maxId = Math.max(...arrIdList);
+
+  return maxId + 1;
+}
 ////
 
 function addUserProduct(request) {
-  const appendUserId = Number(request.params.userId);
+  const paramsUserId = Number(request.params.userId);
   let savedUsers = getData(mockDataPath.users);
+
+  const id = getId(savedUsers.users[paramsUserId].products);
+
   const addedProduct = {
-    id: savedUsers.users[appendUserId].products.length,
+    id: id,
     ...request.body,
   };
 
   savedUsers.users.map((user) => {
-    if (appendUserId === user.id) {
+    if (paramsUserId === user.id) {
       user.products.push(addedProduct);
     }
   });
@@ -50,7 +66,7 @@ function addUserProduct(request) {
   try {
     writeDataInJSON(mockDataPath.users, savedUsers);
 
-    const updatedProductList = getData(mockDataPath.users).users[appendUserId]
+    const updatedProductList = getData(mockDataPath.users).users[paramsUserId]
       .products;
 
     return updatedProductList;
@@ -60,21 +76,48 @@ function addUserProduct(request) {
   }
 }
 
+function deleteUserProduct(request) {
+  const paramsUserId = Number(request.params.userId);
+  const paramsProductId = Number(request.params.productId);
+
+  const savedUsers = getData(mockDataPath.users);
+
+  const udpatedProductList = savedUsers.users[paramsUserId].products.filter(
+    (product) => {
+      return product.id !== paramsProductId;
+    }
+  );
+
+  savedUsers.users[paramsUserId].products = udpatedProductList;
+
+  try {
+    writeDataInJSON(mockDataPath.users, savedUsers);
+
+    const updatedList = getData(mockDataPath.users).users[paramsUserId]
+      .products;
+
+    return updatedList;
+  } catch (err) {
+    console.log(err);
+    return "err delete";
+  }
+}
+
 function updateUserProduct(request) {
-  const appendUserId = Number(request.params.userId);
-  const appendProductId = Number(request.params.productId);
+  const paramsUserId = Number(request.params.userId);
+  const paramsProductId = Number(request.params.productId);
   const savedUsers = getData(mockDataPath.users);
   const appendProduct = request.body;
 
-  savedUsers.users[appendUserId].products[appendProductId] = {
-    id: appendProductId,
+  savedUsers.users[paramsUserId].products[paramsProductId] = {
+    id: paramsProductId,
     ...appendProduct,
   };
 
   try {
     writeDataInJSON(mockDataPath.users, savedUsers);
 
-    const updatedList = getData(mockDataPath.users).users[appendUserId]
+    const updatedList = getData(mockDataPath.users).users[paramsUserId]
       .products;
 
     return updatedList;
@@ -117,6 +160,13 @@ function putHttpRoute(
       app.get(route, cors(), (req, res) => {
         res.send(mockData);
       });
+    case "delete":
+      app.delete(route, (req, res) => {
+        if (resProcessCallback) {
+          const result = resProcessCallback(req);
+          res.send(result);
+        }
+      });
   }
 }
 
@@ -128,8 +178,10 @@ function serverListener(app, port) {
 
 putHttpRoute(app, routes.users, "get", getData(mockDataPath.users));
 
-putHttpRoute(app, routes.userProduct, "post", null, updateUserProduct);
+putHttpRoute(app, routes.userProductUpdate, "post", null, updateUserProduct);
 
 putHttpRoute(app, routes.userProducts, "post", null, addUserProduct);
+
+putHttpRoute(app, routes.userProductDelete, "delete", null, deleteUserProduct);
 
 serverListener(app, port);
