@@ -2,6 +2,8 @@
   "users": [
     {
       "id": 0,
+      "login": "q@mail.com",
+      "password": "123",
       "products": [
         {
           "id": 0,
@@ -34,6 +36,8 @@
     },
     {
       "id": 1,
+      "login": "qq@mail.com",
+      "password": "123",
       "products": [
         {
           "id": 0,
@@ -66,6 +70,8 @@
     },
     {
       "id": 2,
+      "login": "qqq@mail.com",
+      "password": "123",
       "products": [
         {
           "id": 0,
