@@ -11,9 +11,10 @@ const mockDataPath = {
   users: "./mock-data/users.json",
 };
 
+// TODO update routes {path, methood, handler}
 const routes = {
   users: "/users",
-  userAuthorization: "/user",
+  userRegistration: "/user",
   userProductUpdate: "/user/:userId/update/products/:productId",
   userProductDelete: "/user/:userId/delete/products/:productId",
   userProducts: "/user/:userId/products",
@@ -21,20 +22,38 @@ const routes = {
 
 //  helpers //
 function getData(path) {
-  const data = require(path);
+  try {
+    const data = fs.readFileSync(path, "utf8");
 
-  return data;
+    return data;
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 function writeDataInJSON(file, data) {
-  fs.writeFile(file, JSON.stringify(data), "utf8", (err) => {
+  fs.writeFileSync(file, JSON.stringify(data), "utf8", (err) => {
     if (err) {
       throw err;
     }
   });
 }
 
-function getId(arr) {
+function getUserData() {
+  return getData(mockDataPath.users);
+
+  //TODO если пустой файл то возвращаем валидную структуру, переделать структуру users.json
+  // return {
+  //   'users': [],
+  // }
+}
+
+function saveUserData(updatedUsers) {
+  return writeDataInJSON(mockDataPath.users, updatedUsers);
+}
+
+function generateUserId(arr) {
+  // TODO add uuid
   let arrIdList = [];
 
   arr.map((item) => {
@@ -47,46 +66,39 @@ function getId(arr) {
 }
 ////
 
-function userAuthorization(request) {
-  // TODO добавить проверку по записанным login (если у любого из юзеров есть подобный login, то вернуть ошибку)
-
-  const savedUsers = getData(mockDataPath.users);
-  const id = getId(savedUsers.users);
+function userRegistration(request) {
   const userEmail = request.body.login;
   const userPassword = request.body.password;
+  const savedUsers = getUserData();
+  const userId = generateUserId(JSON.parse(savedUsers).users);
 
-  const addedUser = {
-    id: id,
+  const newUser = {
+    id: userId,
     login: userEmail,
     password: userPassword,
     products: [],
   };
 
   const updatedUsers = {
-    users: [...savedUsers.users, addedUser],
+    users: [...JSON.parse(savedUsers).users, newUser],
   };
 
-  try {
-    writeDataInJSON(mockDataPath.users, updatedUsers);
+  saveUserData(updatedUsers);
 
-    // результат должен быть обработан после записи в файл (writeDataInJSON), получить нового юзера по id из файла и вернуть его
-    // TODO сейчас возвращается undefined
-    const result = getData(mockDataPath.users).users.find(
-      (user) => user.id === id
-    );
+  const updateSavedUsers = JSON.parse(getUserData());
 
-    return result;
-  } catch (err) {
-    console.log(err);
-    return "err add";
-  }
+  const result = updateSavedUsers.users.find((user) => {
+    return user.id === userId;
+  });
+
+  return result;
 }
 
 function addUserProduct(request) {
   const paramsUserId = Number(request.params.userId);
-  let savedUsers = getData(mockDataPath.users);
+  let savedUsers = getUserData();
 
-  const id = getId(savedUsers.users[paramsUserId].products);
+  const id = generateUserId(savedUsers.users[paramsUserId].products);
 
   const addedProduct = {
     id: id,
@@ -102,8 +114,7 @@ function addUserProduct(request) {
   try {
     writeDataInJSON(mockDataPath.users, savedUsers);
 
-    const updatedProductList = getData(mockDataPath.users).users[paramsUserId]
-      .products;
+    const updatedProductList = getUserData().users[paramsUserId].products;
 
     return updatedProductList;
   } catch (err) {
@@ -116,7 +127,7 @@ function deleteUserProduct(request) {
   const paramsUserId = Number(request.params.userId);
   const paramsProductId = Number(request.params.productId);
 
-  const savedUsers = getData(mockDataPath.users);
+  const savedUsers = getUserData();
 
   const udpatedProductList = savedUsers.users[paramsUserId].products.filter(
     (product) => {
@@ -129,8 +140,7 @@ function deleteUserProduct(request) {
   try {
     writeDataInJSON(mockDataPath.users, savedUsers);
 
-    const updatedList = getData(mockDataPath.users).users[paramsUserId]
-      .products;
+    const updatedList = getUserData().users[paramsUserId].products;
 
     return updatedList;
   } catch (err) {
@@ -142,7 +152,7 @@ function deleteUserProduct(request) {
 function updateUserProduct(request) {
   const paramsUserId = Number(request.params.userId);
   const paramsProductId = Number(request.params.productId);
-  const savedUsers = getData(mockDataPath.users);
+  const savedUsers = getUserData();
   const appendProduct = request.body;
 
   savedUsers.users[paramsUserId].products[paramsProductId] = {
@@ -153,8 +163,7 @@ function updateUserProduct(request) {
   try {
     writeDataInJSON(mockDataPath.users, savedUsers);
 
-    const updatedList = getData(mockDataPath.users).users[paramsUserId]
-      .products;
+    const updatedList = getUserData().users[paramsUserId].products;
 
     return updatedList;
   } catch (err) {
@@ -180,8 +189,6 @@ function putHttpRoute(
     optionsSuccessStatus: 200,
   };
 
-  app.use(bodyParser.json());
-
   switch (method) {
     case "post":
       app.post(route, upload.array(), cors(), (req, res) => {
@@ -205,13 +212,12 @@ function putHttpRoute(
   }
 }
 
-function serverListener(app, port) {
-  app.listen(port, () => {
-    console.log("server start");
-  });
-}
+app.use(bodyParser.json());
 
-putHttpRoute(app, routes.users, "get", getData(mockDataPath.users));
+// TODO putHttpRoute(app, routes.users, "get", getUserData());
+// putHttpRoute(app, routes.users, "get", null, () => {
+//   getUserData();
+// });
 
 putHttpRoute(app, routes.userProductUpdate, "post", null, updateUserProduct);
 
@@ -219,6 +225,8 @@ putHttpRoute(app, routes.userProducts, "post", null, addUserProduct);
 
 putHttpRoute(app, routes.userProductDelete, "delete", null, deleteUserProduct);
 
-putHttpRoute(app, routes.userAuthorization, "post", null, userAuthorization);
+putHttpRoute(app, routes.userRegistration, "post", null, userRegistration);
 
-serverListener(app, port);
+app.listen(port, () => {
+  console.log("server start");
+});
