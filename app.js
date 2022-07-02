@@ -11,14 +11,33 @@ const mockDataPath = {
   users: "./mock-data/users.json",
 };
 
-// TODO update routes {path, methood, handler}
-const routes = {
-  userRegistration: "/user",
-  userProductUpdate: "/user/:userId/update/products/:productId",
-  userProductDelete: "/user/:userId/delete/products/:productId",
-  userProductAdd: "/user/:userId/add/product",
-  userProductsGet: "/user/:userId/get/product",
-};
+const routes = [
+  {
+    path: "/user",
+    method: "post",
+    callback: (request) => userRegistration(request),
+  },
+  {
+    path: "/user/:userId/update/product/:productId",
+    method: "post",
+    callback: (request) => updateUserProduct(request),
+  },
+  {
+    path: "/user/:userId/delete/product/:productId",
+    method: "delete",
+    callback: (request) => deleteUserProduct(request),
+  },
+  {
+    path: "/user/:userId/add/product",
+    method: "post",
+    callback: (request) => addUserProduct(request),
+  },
+  {
+    path: "/user/:userId/get/products",
+    method: "get",
+    callback: (request) => getUserProducts(request),
+  },
+];
 
 //  helpers //
 function getData(path) {
@@ -111,14 +130,14 @@ function addUserProduct(request) {
   const paramsUserId = Number(request.params.userId);
   let savedUsers = getUserData();
 
-  const id = generateUserId(savedUsers.users[paramsUserId].products);
+  const id = generateUserId(savedUsers[paramsUserId].products);
 
   const addedProduct = {
     id: id,
     ...request.body,
   };
 
-  savedUsers.users.map((user) => {
+  savedUsers.map((user) => {
     if (paramsUserId === user.id) {
       user.products.push(addedProduct);
     }
@@ -151,18 +170,18 @@ function deleteUserProduct(request) {
 
   const savedUsers = getUserData();
 
-  const udpatedProductList = savedUsers.users[paramsUserId].products.filter(
+  const udpatedProductList = savedUsers[paramsUserId].products.filter(
     (product) => {
       return product.id !== paramsProductId;
     }
   );
 
-  savedUsers.users[paramsUserId].products = udpatedProductList;
+  savedUsers[paramsUserId].products = udpatedProductList;
 
   try {
     saveUserData(savedUsers);
 
-    const updatedList = getUserData().users[paramsUserId].products;
+    const updatedList = getUserData()[paramsUserId].products;
 
     return updatedList;
   } catch (err) {
@@ -194,7 +213,7 @@ function updateUserProduct(request) {
   }
 }
 
-function putHttpRoute(app, route, method, resProcessCallback = null) {
+function putHttpRoute(app, route, method, resProcessCallback) {
   // TODO configure cors for a personal server
   const corsOptions = {
     origin: "http://localhost:3000/",
@@ -228,15 +247,13 @@ function putHttpRoute(app, route, method, resProcessCallback = null) {
 
 app.use(bodyParser.json());
 
-putHttpRoute(app, routes.userProductsGet, "get", getUserProducts);
+routes.forEach((route) => {
+  const path = route.path;
+  const method = route.method;
+  const callback = route.callback;
 
-putHttpRoute(app, routes.userProductUpdate, "post", updateUserProduct);
-
-putHttpRoute(app, routes.userProductAdd, "post", addUserProduct);
-
-putHttpRoute(app, routes.userProductDelete, "delete", deleteUserProduct);
-
-putHttpRoute(app, routes.userRegistration, "post", userRegistration);
+  putHttpRoute(app, path, method, callback);
+});
 
 app.listen(port, () => {
   console.log("server start");
