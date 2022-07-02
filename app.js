@@ -13,7 +13,6 @@ const mockDataPath = {
 
 // TODO update routes {path, methood, handler}
 const routes = {
-  users: "/users",
   userRegistration: "/user",
   userProductUpdate: "/user/:userId/update/products/:productId",
   userProductDelete: "/user/:userId/delete/products/:productId",
@@ -64,34 +63,47 @@ function generateUserId(arr) {
 
   return maxId + 1;
 }
+
+function checkLoginMatching(login, users) {
+  const checkLogin = users.findIndex((user) => user.login === login);
+
+  return checkLogin === -1 ? true : false;
+}
+
+function findUser(id, users) {
+  return users.find((user) => user.id === id);
+}
 ////
 
 function userRegistration(request) {
   const userEmail = request.body.login;
   const userPassword = request.body.password;
-  const savedUsers = getUserData();
-  const userId = generateUserId(JSON.parse(savedUsers).users);
+  const savedUsers = JSON.parse(getUserData());
+  const userId = generateUserId(savedUsers.users);
+  const loginIsValid = checkLoginMatching(userEmail, savedUsers.users);
 
-  const newUser = {
-    id: userId,
-    login: userEmail,
-    password: userPassword,
-    products: [],
-  };
+  if (loginIsValid) {
+    const newUser = {
+      id: userId,
+      login: userEmail,
+      password: userPassword,
+      products: [],
+    };
 
-  const updatedUsers = {
-    users: [...JSON.parse(savedUsers).users, newUser],
-  };
+    const updatedUsers = {
+      users: [...savedUsers.users, newUser],
+    };
 
-  saveUserData(updatedUsers);
+    saveUserData(updatedUsers);
 
-  const updateSavedUsers = JSON.parse(getUserData());
+    const updateSavedUsers = JSON.parse(getUserData()).users;
 
-  const result = updateSavedUsers.users.find((user) => {
-    return user.id === userId;
-  });
+    const result = findUser(userId, updateSavedUsers);
 
-  return result;
+    return result;
+  } else {
+    return "this user already exists";
+  }
 }
 
 function addUserProduct(request) {
@@ -122,6 +134,8 @@ function addUserProduct(request) {
     return "err add";
   }
 }
+
+function getUserProduct(request) {}
 
 function deleteUserProduct(request) {
   const paramsUserId = Number(request.params.userId);
@@ -172,13 +186,7 @@ function updateUserProduct(request) {
   }
 }
 
-function putHttpRoute(
-  app,
-  route,
-  method,
-  mockData = null,
-  resProcessCallback = null
-) {
+function putHttpRoute(app, route, method, resProcessCallback = null) {
   // TODO configure cors for a personal server
   const corsOptions = {
     origin: "http://localhost:3000/",
@@ -192,22 +200,20 @@ function putHttpRoute(
   switch (method) {
     case "post":
       app.post(route, upload.array(), cors(), (req, res) => {
-        if (resProcessCallback) {
-          const result = resProcessCallback(req);
+        const result = resProcessCallback(req);
 
-          res.send(result);
-        }
+        res.send(result);
       });
     case "get":
       app.get(route, cors(), (req, res) => {
-        res.send(mockData);
+        const result = resProcessCallback(req);
+
+        res.send(result);
       });
     case "delete":
       app.delete(route, (req, res) => {
-        if (resProcessCallback) {
-          const result = resProcessCallback(req);
-          res.send(result);
-        }
+        const result = resProcessCallback(req);
+        res.send(result);
       });
   }
 }
@@ -215,17 +221,16 @@ function putHttpRoute(
 app.use(bodyParser.json());
 
 // TODO putHttpRoute(app, routes.users, "get", getUserData());
-// putHttpRoute(app, routes.users, "get", null, () => {
-//   getUserData();
-// });
 
-putHttpRoute(app, routes.userProductUpdate, "post", null, updateUserProduct);
+putHttpRoute(app, routes.userProductUpdate, "get", getUserProduct);
 
-putHttpRoute(app, routes.userProducts, "post", null, addUserProduct);
+putHttpRoute(app, routes.userProductUpdate, "post", updateUserProduct);
 
-putHttpRoute(app, routes.userProductDelete, "delete", null, deleteUserProduct);
+putHttpRoute(app, routes.userProducts, "post", addUserProduct);
 
-putHttpRoute(app, routes.userRegistration, "post", null, userRegistration);
+putHttpRoute(app, routes.userProductDelete, "delete", deleteUserProduct);
+
+putHttpRoute(app, routes.userRegistration, "post", userRegistration);
 
 app.listen(port, () => {
   console.log("server start");
