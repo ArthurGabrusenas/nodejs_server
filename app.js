@@ -16,7 +16,8 @@ const routes = {
   userRegistration: "/user",
   userProductUpdate: "/user/:userId/update/products/:productId",
   userProductDelete: "/user/:userId/delete/products/:productId",
-  userProducts: "/user/:userId/products",
+  userProductAdd: "/user/:userId/add/product",
+  userProductsGet: "/user/:userId/get/product",
 };
 
 //  helpers //
@@ -135,7 +136,14 @@ function addUserProduct(request) {
   }
 }
 
-function getUserProduct(request) {}
+function getUserProducts(request) {
+  const paramsUserId = Number(request.params.userId);
+  const users = JSON.parse(getUserData()).users;
+
+  const result = findUser(paramsUserId, users).products;
+
+  return result;
+}
 
 function deleteUserProduct(request) {
   const paramsUserId = Number(request.params.userId);
@@ -222,11 +230,11 @@ app.use(bodyParser.json());
 
 // TODO putHttpRoute(app, routes.users, "get", getUserData());
 
-putHttpRoute(app, routes.userProductUpdate, "get", getUserProduct);
+putHttpRoute(app, routes.userProductsGet, "get", getUserProducts);
 
 putHttpRoute(app, routes.userProductUpdate, "post", updateUserProduct);
 
-putHttpRoute(app, routes.userProducts, "post", addUserProduct);
+putHttpRoute(app, routes.userProductAdd, "post", addUserProduct);
 
 putHttpRoute(app, routes.userProductDelete, "delete", deleteUserProduct);
 
