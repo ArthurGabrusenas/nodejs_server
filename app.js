@@ -25,7 +25,7 @@ function getData(path) {
   try {
     const data = fs.readFileSync(path, "utf8");
 
-    return data;
+    return JSON.parse(data);
   } catch (error) {
     console.log(error);
   }
@@ -79,7 +79,7 @@ function findUser(id, users) {
 function userRegistration(request) {
   const userEmail = request.body.login;
   const userPassword = request.body.password;
-  const savedUsers = JSON.parse(getUserData());
+  const savedUsers = getUserData();
   const userId = generateUserId(savedUsers.users);
   const loginIsValid = checkLoginMatching(userEmail, savedUsers.users);
 
@@ -97,7 +97,7 @@ function userRegistration(request) {
 
     saveUserData(updatedUsers);
 
-    const updateSavedUsers = JSON.parse(getUserData()).users;
+    const updateSavedUsers = getUserData();
 
     const result = findUser(userId, updateSavedUsers);
 
@@ -125,9 +125,9 @@ function addUserProduct(request) {
   });
 
   try {
-    writeDataInJSON(mockDataPath.users, savedUsers);
+    saveUserData(savedUsers);
 
-    const updatedProductList = getUserData().users[paramsUserId].products;
+    const updatedProductList = getUserData()[paramsUserId].products;
 
     return updatedProductList;
   } catch (err) {
@@ -138,7 +138,7 @@ function addUserProduct(request) {
 
 function getUserProducts(request) {
   const paramsUserId = Number(request.params.userId);
-  const users = JSON.parse(getUserData()).users;
+  const users = getUserData();
 
   const result = findUser(paramsUserId, users).products;
 
@@ -160,7 +160,7 @@ function deleteUserProduct(request) {
   savedUsers.users[paramsUserId].products = udpatedProductList;
 
   try {
-    writeDataInJSON(mockDataPath.users, savedUsers);
+    saveUserData(savedUsers);
 
     const updatedList = getUserData().users[paramsUserId].products;
 
@@ -177,17 +177,17 @@ function updateUserProduct(request) {
   const savedUsers = getUserData();
   const appendProduct = request.body;
 
-  savedUsers.users[paramsUserId].products[paramsProductId] = {
+  savedUsers[paramsUserId].products[paramsProductId] = {
     id: paramsProductId,
     ...appendProduct,
   };
 
   try {
-    writeDataInJSON(mockDataPath.users, savedUsers);
+    saveUserData(savedUsers);
 
-    const updatedList = getUserData().users[paramsUserId].products;
+    const updatedList = getUserData();
 
-    return updatedList;
+    return updatedList[paramsUserId].products;
   } catch (err) {
     console.log(err);
     return "err update";
@@ -227,8 +227,6 @@ function putHttpRoute(app, route, method, resProcessCallback = null) {
 }
 
 app.use(bodyParser.json());
-
-// TODO putHttpRoute(app, routes.users, "get", getUserData());
 
 putHttpRoute(app, routes.userProductsGet, "get", getUserProducts);
 
