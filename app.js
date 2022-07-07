@@ -13,7 +13,12 @@ const mockDataPath = {
 
 const routes = [
   {
-    path: "/user",
+    path: "/authorization",
+    method: "post",
+    callback: (request) => userAuthorization(request),
+  },
+  {
+    path: "/registration",
     method: "post",
     callback: (request) => userRegistration(request),
   },
@@ -95,10 +100,36 @@ function findUser(id, users) {
 }
 ////
 
+function userAuthorization(request) {
+  const userLogin = request.body.login;
+  const userPassword = request.body.password;
+  const savedUsers = getUserData();
+
+  const user = savedUsers.find((user) => user.login === userLogin);
+  const password = user && user.password === userPassword;
+
+  if (user) {
+    if (password) {
+      delete user.password;
+
+      return user;
+    } else {
+      return {
+        status: "invalidPassword",
+      };
+    }
+  } else {
+    return {
+      status: "userNotFound",
+    };
+  }
+}
+
 function userRegistration(request) {
   const userEmail = request.body.login;
   const userPassword = request.body.password;
   const savedUsers = getUserData();
+
   const userId = generateUserId(savedUsers.users);
   const loginIsValid = checkLoginMatching(userEmail, savedUsers.users);
 
@@ -118,7 +149,9 @@ function userRegistration(request) {
 
     const updateSavedUsers = getUserData();
 
-    const result = findUser(userId, updateSavedUsers);
+    const result = findUser(userId, updateSavedUsers.users);
+
+    delete result.password;
 
     return result;
   } else {
