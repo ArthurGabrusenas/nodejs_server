@@ -64,7 +64,7 @@ function writeDataInJSON(file, data) {
 }
 
 function getUserData() {
-  return getData(mockDataPath.users);
+  return getData(mockDataPath.users).users;
 
   //TODO если пустой файл то возвращаем валидную структуру, переделать структуру users.json
   // return {
@@ -130,8 +130,8 @@ function userRegistration(request) {
   const userPassword = request.body.password;
   const savedUsers = getUserData();
 
-  const userId = generateUserId(savedUsers.users);
-  const loginIsValid = checkLoginMatching(userEmail, savedUsers.users);
+  const userId = generateUserId(savedUsers);
+  const loginIsValid = checkLoginMatching(userEmail, savedUsers);
 
   if (loginIsValid) {
     const newUser = {
@@ -142,14 +142,14 @@ function userRegistration(request) {
     };
 
     const updatedUsers = {
-      users: [...savedUsers.users, newUser],
+      users: [...savedUsers, newUser],
     };
 
     saveUserData(updatedUsers);
 
     const updateSavedUsers = getUserData();
 
-    const result = findUser(userId, updateSavedUsers.users);
+    const result = findUser(userId, updateSavedUsers);
 
     delete result.password;
 
@@ -177,7 +177,7 @@ function addUserProduct(request) {
   });
 
   try {
-    saveUserData(savedUsers);
+    saveUserData({ users: savedUsers });
 
     const updatedProductList = getUserData()[paramsUserId].products;
 
@@ -198,21 +198,21 @@ function getUserProducts(request) {
 }
 
 function deleteUserProduct(request) {
+  // TODO добавить проверку на удаление продукта которого нет.
+
   const paramsUserId = Number(request.params.userId);
   const paramsProductId = Number(request.params.productId);
 
   const savedUsers = getUserData();
 
   const udpatedProductList = savedUsers[paramsUserId].products.filter(
-    (product) => {
-      return product.id !== paramsProductId;
-    }
+    (product) => product.id !== paramsProductId
   );
 
   savedUsers[paramsUserId].products = udpatedProductList;
 
   try {
-    saveUserData(savedUsers);
+    saveUserData({ users: savedUsers });
 
     const updatedList = getUserData()[paramsUserId].products;
 
@@ -224,6 +224,7 @@ function deleteUserProduct(request) {
 }
 
 function updateUserProduct(request) {
+  // TODO добавить проверку на обновление не существующего продукта
   const paramsUserId = Number(request.params.userId);
   const paramsProductId = Number(request.params.productId);
   const savedUsers = getUserData();
@@ -235,7 +236,7 @@ function updateUserProduct(request) {
   };
 
   try {
-    saveUserData(savedUsers);
+    saveUserData({ users: savedUsers });
 
     const updatedList = getUserData();
 
