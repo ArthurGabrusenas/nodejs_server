@@ -4,14 +4,9 @@ import multer from "multer";
 import cors from "cors";
 import bodyParser from "body-parser";
 
-// const express = require("express");
-// const multer = require("multer");
-// const cors = require("cors");
-// const fs = require("fs");
 const app = express();
 const port = 3100;
 const upload = multer();
-// const bodyParser = require("body-parser");
 
 app.use(bodyParser.json());
 
