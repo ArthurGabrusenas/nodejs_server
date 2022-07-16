@@ -1,0 +1,46 @@
+{
+  "userAuthorization": {
+    "link": "/authorization",
+    "body": {
+      "login": "string",
+      "password": "string"
+    }
+  },
+  "userRegistration": {
+    "link": "/registration",
+    "body": {
+      "login": "string",
+      "password": "string"
+    }
+  },
+  "updateUserProduct": {
+    "link": "/user/:userId/update/product/:productId",
+    "body": {
+      "name": "string",
+      "СHTS": "number",
+      "GMS": "number",
+      "bUnit": "number",
+      "totalСHTS": "number",
+      "propductInGMS": "number"
+    }
+  },
+  "deleteUserProduct": {
+    "link": "/user/:userId/delete/product/:productId",
+    "body": "none"
+  },
+  "addUserProduct": {
+    "link": "/user/:userId/add/product",
+    "body": {
+      "name": "string",
+      "СHTS": "number",
+      "GMS": "number",
+      "bUnit": "number",
+      "totalСHTS": "number",
+      "propductInGMS": "number"
+    }
+  },
+  "getUserProducts": {
+    "link": "/user/:userId/get/products",
+    "body": "none"
+  }
+}
